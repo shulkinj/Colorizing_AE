@@ -9,7 +9,22 @@ tf.keras.backend.clear_session()  # For easy reset of notebook state.
 
 
 
+def parse_img(filename,filename1):
+    #read img file as string
+    img_str = tf.io.read_file(filename)
+    #convert to tensor object
+    img = tf.io.decode_jpeg(img_str, channels=3)
+    #normalize to floats in [0,1]
+    img = tf.image.convert_image_dtype(img, tf.float32)
 
+    img = tf.image.resize_with_pad(img, 512,512)
+
+    gray_img = tf.image.rgb_to_grayscale(img)
+
+    return img , gray_img
+
+
+'''
 ## Custom padding that pads with zeros on right and bottom
 ## Used in Decoder to grow size from (6,6,32) to (7,7,32)
 class Custom_Padding(layers.Layer):
@@ -27,7 +42,7 @@ class Custom_Padding(layers.Layer):
         zeros_2 = tf.fill(dims, 0.0)
         padded = tf.concat(values= [one_axis,zeros_2], axis= 2)
         return padded
-
+'''
 
 class Encoder(layers.Layer):
 
@@ -119,6 +134,17 @@ class Autoencoder(tf.keras.Model):
 
 
 
+##GET FILE NAMES FIRST
+train_names = tf.io.gfile.glob('/Users/jacobshulkin/Documents/Data/Faces/Training/*.jpg')
+print(len(train_names))
+
+train_set = tf.data.Dataset.from_tensor_slices((train_names,train_names))
+train_set = train_set.shuffle(len(train_names))
+train_set = train_set.map(parse_img, num_parallel_calls=4)
+
+
+
+'''
 ###### Load Data ######
 (train, _ ) , (test , _ ) = datasets.mnist.load_data()
 
@@ -130,8 +156,10 @@ test_shape = (test.shape[0],test.shape[1],test.shape[2],1)
 
 train = np.reshape(train,train_shape)
 test = np.reshape(test,test_shape)
+'''
 
 
+'''
 ###### Add noise ######
 noise_factor = 0.5
 train_noisy = train + noise_factor * np.random.normal(loc=0.0, scale=1.0, size=train.shape) 
@@ -139,9 +167,11 @@ test_noisy = test + noise_factor * np.random.normal(loc=0.0, scale=1.0, size=tes
 
 train_noisy = np.clip(train_noisy, 0., 1.)
 test_noisy = np.clip(test_noisy, 0., 1.)
+'''
 
 
 
+'''
 ###### Set up Model ######
 batch_sz=32
 
@@ -155,8 +185,9 @@ ae.compile(optimizer=opt, loss=losses.MSE)
 ## Tensorboard set up ##
 log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
+'''
 
-
+'''
 ###### TRAINING ######
 ae.fit( train_noisy, train, epochs=20, batch_size=batch_sz, 
         shuffle= True, validation_data=(test_noisy,test),
@@ -191,4 +222,4 @@ for i in range(n):
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
 plt.show()
-
+'''
