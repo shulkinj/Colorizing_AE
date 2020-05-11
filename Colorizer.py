@@ -54,7 +54,7 @@ class Encoder(layers.Layer):
                 **kwargs):
         super(Encoder,self).__init__(name=name, **kwargs)
         self.conv_1 = layers.Conv2D(dim_1, (3,3) , strides=(1,1), padding='same', activation='relu',
-                      input_shape=(28, 28, 1))
+                      input_shape=(256, 256, 3))
         self.pool_1 = layers.MaxPooling2D((2,2))
         self.conv_2 = layers.Conv2D(dim_2, (3,3) , strides=(1,1), padding='same', activation='relu')
         self.pool_2 = layers.MaxPooling2D((2,2))
@@ -92,7 +92,6 @@ class Decoder(layers.Layer):
         self.dense_1  = layers.Dense(dim_3*3*3, activation='relu')
         self.reshape = layers.Reshape((3,3,dim_3))
         self.upsample_3 = layers.UpSampling2D((2,2))
-        self.padding = Custom_Padding()
         self.convT_3 = layers.Conv2DTranspose(dim_2, (3,3) , strides=(1,1), padding='same', activation='relu')
         self.upsample_2 = layers.UpSampling2D((2,2))
         self.convT_2 = layers.Conv2DTranspose(dim_1, (3,3) , strides=(1,1), padding='same', activation='relu')
@@ -105,8 +104,7 @@ class Decoder(layers.Layer):
         dense_1 = self.dense_1(dense_2)
         reshape = self.reshape(dense_1)
         upsample_3 = self.upsample_3(reshape)
-        padding = self.padding(upsample_3)
-        convT_3 = self.convT_3(padding)
+        convT_3 = self.convT_3(upsample_3)
         upsample_2 = self.upsample_2(convT_3)
         convT_2 = self.convT_2(upsample_2)
         upsample_1 = self.upsample_1(convT_2)
@@ -136,7 +134,7 @@ class Autoencoder(tf.keras.Model):
 
 ##GET FILE NAMES FIRST
 train_names = tf.io.gfile.glob('/Users/jacobshulkin/Documents/Data/Faces/Training/*.jpg')
-print(len(train_names))
+print(train_names)
 
 train_set = tf.data.Dataset.from_tensor_slices((train_names,train_names))
 train_set = train_set.shuffle(len(train_names))
